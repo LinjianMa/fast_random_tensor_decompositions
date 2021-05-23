@@ -35,7 +35,7 @@ class CPformat(object):
         self.tenpy.printf("Residual computation took", t1 - t0, "seconds")
         return np.sqrt(self.nrm_sq + decomp_nrm_sq - 2 * inner)
 
-    def CP_ALS(self, A, num_iter, method='DT', args=None, res_calc_freq=1):
+    def CP_ALS(self, A, num_iter, method='ALS', args=None, res_calc_freq=1):
         if method == "Leverage_tucker" or method == "Tucker":
             return self.CP_ALS_w_tucker(A, num_iter, method, args,
                                         res_calc_freq)
@@ -46,7 +46,7 @@ class CPformat(object):
     def CP_ALS_standard(self,
                         A,
                         num_iter,
-                        method='DT',
+                        method='ALS',
                         args=None,
                         res_calc_freq=1):
         T_tucker = self.construct_tucker_format()
@@ -58,7 +58,7 @@ class CPformat(object):
         ret_list = []
         time_all = 0.
         optimizer_list = {
-            'DT':
+            'ALS':
             CP_Tuckerformat_DT_Optimizer(self.tenpy, self, A),
             'Leverage':
             CP_Tuckerformat_leverage_Optimizer(self.tenpy, self, A, args),
@@ -103,7 +103,7 @@ class CPformat(object):
     def CP_ALS_w_tucker(self,
                         A,
                         num_iter,
-                        method='DT',
+                        method='ALS',
                         args=None,
                         res_calc_freq=1):
 
@@ -117,7 +117,7 @@ class CPformat(object):
         if method == "Leverage_tucker":
             T_tucker.Tucker_ALS(A, 5, 'Leverage', args, res_calc_freq)
         elif method == "Tucker":
-            T_tucker.Tucker_ALS(A, 5, 'DT', args, res_calc_freq)
+            T_tucker.Tucker_ALS(A, 5, 'ALS', args, res_calc_freq)
             T_tucker.optimizer.core = T_tucker.compute_core(A)
 
         # factors_small = [self.tenpy.random((rank, rank)) for i in range(self.order)]

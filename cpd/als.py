@@ -1,6 +1,6 @@
 import time
 import numpy as np
-from als.als_optimizer import DTALS_base, ALS_leverage_base, PPALS_base, partialPP_ALS_base
+from als.als_optimizer import DTALS_base, ALS_leverage_base
 from backend import numpy_ext
 from .common_kernels import sub_lists, mttkrp, khatri_rao_product_chain
 

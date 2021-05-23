@@ -163,19 +163,19 @@ class Tuckerformat(object):
         self.tenpy.printf("Residual computation took", t1 - t0, "seconds")
         return np.sqrt(nrm_sq)
 
-    def Tucker_ALS(self, A, num_iter, method='DT', args=None, res_calc_freq=1):
+    def Tucker_ALS(self, A, num_iter, method='ALS', args=None, res_calc_freq=1):
 
         ret_list = []
 
         time_all = 0.
         optimizer_list = {
-            'DT':
+            'ALS':
             Tuckerformat_DTALS_Optimizer(self.tenpy, self, A),
             'Leverage':
             Tuckerformat_leverage_Optimizer(self.tenpy, self, A, args),
-            'Countsketch':
+            'Tensorsketch':
             Tuckerformat_countsketch_Optimizer(self.tenpy, self, A, args),
-            'Countsketch-su':
+            'Tensorsketch-ref':
             Tuckerformat_countsketch_su_Optimizer(self.tenpy, self, A, args)
         }
         self.optimizer = optimizer_list[method]
@@ -184,9 +184,9 @@ class Tuckerformat(object):
         fitness_list = []
         for i in range(num_iter):
             if i % res_calc_freq == 0 or i == num_iter - 1:
-                if method in ['DT']:
+                if method in ['ALS']:
                     res = self.get_residual(A)
-                elif method in ['Leverage', 'Countsketch', 'Countsketch-su']:
+                elif method in ['Leverage', 'Tensorsketch', 'Tensorsketch-ref']:
                     res = self.get_residual(A, self.optimizer.core)
                 fitness = 1 - res / self.normT
                 d_fit = abs(fitness - fitness_old)

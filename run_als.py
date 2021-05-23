@@ -19,7 +19,7 @@ def CP_ALS(tenpy,
            num_iter,
            csv_file=None,
            Regu=0.,
-           method='DT',
+           method='ALS',
            args=None,
            res_calc_freq=1):
 
@@ -27,7 +27,6 @@ def CP_ALS(tenpy,
 
     from cpd.common_kernels import get_residual, get_residual_naive
     from cpd.als import CP_DTALS_Optimizer, CP_leverage_Optimizer
-    from cpd.als import CP_PPALS_Optimizer, CP_PPsimulate_Optimizer, CP_partialPPALS_Optimizer
 
     flag_dt = True
 
@@ -45,7 +44,7 @@ def CP_ALS(tenpy,
         optimizer = CP_DTALS_Optimizer(tenpy, T, A)
     else:
         optimizer_list = {
-            'DT': CP_DTALS_Optimizer(tenpy, T, A),
+            'ALS': CP_DTALS_Optimizer(tenpy, T, A),
             'Leverage': CP_leverage_Optimizer(tenpy, T, A, args),
         }
         optimizer = optimizer_list[method]
@@ -54,11 +53,7 @@ def CP_ALS(tenpy,
     for i in range(num_iter):
 
         t0 = time.time()
-        if method == 'PP':
-            A, pp_restart = optimizer.step(Regu)
-            flag_dt = not pp_restart
-        else:
-            A = optimizer.step(Regu)
+        A = optimizer.step(Regu)
         t1 = time.time()
         tenpy.printf(f"[ {i} ] Sweep took {t1 - t0} seconds")
         time_all += t1 - t0
@@ -104,7 +99,7 @@ def Tucker_ALS(tenpy,
                num_iter,
                csv_file=None,
                Regu=0.,
-               method='DT',
+               method='ALS',
                args=None,
                res_calc_freq=1):
 
@@ -123,10 +118,10 @@ def Tucker_ALS(tenpy,
 
     time_all = 0.
     optimizer_list = {
-        'DT': Tucker_DTALS_Optimizer(tenpy, T, A),
+        'ALS': Tucker_DTALS_Optimizer(tenpy, T, A),
         'Leverage': Tucker_leverage_Optimizer(tenpy, T, A, args),
-        'Countsketch': Tucker_countsketch_Optimizer(tenpy, T, A, args),
-        'Countsketch-su': Tucker_countsketch_su_Optimizer(tenpy, T, A, args)
+        'Tensorsketch': Tucker_countsketch_Optimizer(tenpy, T, A, args),
+        'Tensorsketch-ref': Tucker_countsketch_su_Optimizer(tenpy, T, A, args)
     }
     optimizer = optimizer_list[method]
 
@@ -138,9 +133,9 @@ def Tucker_ALS(tenpy,
             if args.save_tensor:
                 folderpath = join(results_dir, arg_defs.get_file_prefix(args))
                 save_decomposition_results(T, A, tenpy, folderpath)
-            if method in ['DT', 'PP']:
+            if method in ['ALS']:
                 res = get_residual(tenpy, T, A)
-            elif method in ['Leverage', 'Countsketch', 'Countsketch-su']:
+            elif method in ['Leverage', 'Tensorsketch', 'Tensorsketch-ref']:
                 res = get_residual(tenpy, T, A, optimizer.core)
             fitness = 1 - res / normT
             d_fit = abs(fitness - fitness_old)
@@ -156,11 +151,7 @@ def Tucker_ALS(tenpy,
                         [i, time_all, res, fitness, flag_dt, d_fit])
                     csv_file.flush()
         t0 = time.time()
-        if method == 'PP':
-            A, pp_restart = optimizer.step(Regu)
-            flag_dt = not pp_restart
-        else:
-            A = optimizer.step(Regu)
+        A = optimizer.step(Regu)
         t1 = time.time()
         tenpy.printf(f"[ {i} ] Sweep took {t1 - t0} seconds")
         time_all += t1 - t0
@@ -211,7 +202,7 @@ def run_als_cpd(args, tenpy, csv_file):
                                           args.hosvd_core_dim,
                                           compute_core=True)
         ret_list, num_iters_map, time_map, pp_init_iter = CP_ALS(
-            tenpy, A, compressed_T, 100, csv_file, Regu, 'DT', args,
+            tenpy, A, compressed_T, 100, csv_file, Regu, 'ALS', args,
             args.res_calc_freq)
         A_fullsize = [tenpy.dot(transformer[i], A[i]) for i in range(T.ndim)]
         ret_list, num_iters_map, time_map, pp_init_iter = CP_ALS(
@@ -356,6 +347,7 @@ def run_als(args):
             ])
 
     tenpy.seed(args.seed)
+    args.hosvd_core_dim = [args.R for _ in range(args.order)]
     if args.decomposition == "CP":
         return run_als_cpd(args, tenpy, csv_file)
     elif args.decomposition == "Tucker":

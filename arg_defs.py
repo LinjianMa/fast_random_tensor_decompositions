@@ -53,13 +53,13 @@ def add_general_arguments(parser):
     )
     parser.add_argument(
         '--method',
-        default="DT",
+        default="ALS",
         metavar='string',
         choices=[
-            'DT', 'Leverage', 'Countsketch', 'Countsketch-su'
+            'ALS', 'Leverage', 'Tensorsketch', 'Tensorsketch-ref', 'Tucker', 'Leverage_tucker'
         ],
         help=
-        'choose the optimization method: DT, Leverage, Countsketch, Countsketch-su (default: DT)'
+        'choose the optimization method: ALS, Leverage, Tensorsketch, Tensorsketch-ref (default: ALS)'
     )
     parser.add_argument(
         '--decomposition',
@@ -69,6 +69,7 @@ def add_general_arguments(parser):
             'CP',
             'Tucker',
             'Tucker_simulate',
+            'CP_simulate'
         ],
         help=
         'choose the decomposition method: CP, Tucker, Tucker_simulate (default: CP)'
@@ -81,10 +82,6 @@ def add_general_arguments(parser):
         help=
         'initialize factor matrices with hosvd or not (default: 0). If 1, use hosvd. If 2, use randomized range finder (rrf). If 3, use rrf + countsketch.'
     )
-    parser.add_argument('--hosvd-core-dim',
-                        type=int,
-                        nargs='+',
-                        help='hosvd core dimensitionality.')
     parser.add_argument('--seed',
                         type=int,
                         default=1,
