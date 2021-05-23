@@ -1,4 +1,5 @@
-## Python Tensor Decompositions
+## Fast randomized tensor decompositions
+This library contains the implementation of the paper "Fast and accurate randomized algorithms for low-rank tensor decompositions".
 
 ### Note:
 
@@ -15,17 +16,28 @@ python run_als.py -h
 ```
 to see the existing input arguments and their functions.
 
-Run 
-
+To run Tucker decomposition on the dense random tensor (tensor 1 or tensor 2 in the paper), run
 ```
-python tests.py
+python run_als.py --s 500 --R 5 --epsilon 0.25 --seed 1 --tensor random --hosvd 3 --decomposition Tucker --rank-ratio 1.2 --fix-percentage 0. --num-iter 10 --method Leverage --hosvd-core-dim 5 5 5
 ```
-to test some simple CP runs.
+The input tensor will have size `s x s x s`, Tucker rank is based on `--hosvd-core-dim`, the sketch size is `(R/epsilon)**2`. `--hosvd 0` means random initialization, 1 means initialize with HOSVD, and 3 means initialize with RRF detailed in the paper.
 
+To run tensor 2 in the paper, set `--tensor random_bias`. 
 
-Run 
+Method can be `DT`, means the traditional ALS algorithm, or `Leverage`, meaning leverage score sampling (when setting `--fix-percentage 0` it's random sampling, when setting `--fix-percentage 1` it's deterministic sampling), or `Countsketch`, meaning using the TensorSketch algorithm, or `Countsketch-su`, meaning running the algorithm proposed in Melik and Becker, NeurIPS 2018.
 
+To run Tucker decomposition on the real image dataset, run
 ```
-python test_ALS3.py --s 64 --R 10 --r 10 --num-iter 10 --num-lowr-init-iter 2 --sp-fraction 1 --sp-updatelowrank 1 --sp-res 1 --run-naive 1 --run-lowrank 0 --num-slices 1
+python run_als.py --R 5 --epsilon 0.25 --seed 1 --tensor coil100 --hosvd 3 --decomposition Tucker --fix-percentage 0. --num-iter 10 --method Leverage --hosvd-core-dim 5 5 5
 ```
-to execute a test case. 
+where `--tensor` can also be `timelapse`.
+
+To run Tucker decomposition on sparse random tensors (detailed in the appendix), run
+```
+python run_als.py --s 500 --R 5 --epsilon 0.25 --seed 1 --tensor random --hosvd 3 --decomposition Tucker_simulate --rank-ratio 1.2 --fix-percentage 0. --num-iter 10 --method Leverage --hosvd-core-dim 5 5 5
+```
+
+To run CP decomposition on sparse random tensors, run
+```
+python run_als.py --s 500 --R 5 --epsilon 0.25 --seed 1 --tensor random --hosvd 3 --decomposition CP_simulate --rank-ratio 1.2 --fix-percentage 0. --num-iter 10 --method Leverage --hosvd-core-dim 5 5 5
+```
